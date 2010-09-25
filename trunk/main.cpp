@@ -1,3 +1,16 @@
+/*************************************************************
+* Copyright (c) 2010 by Egor N. Chashchin. All Rights Reserved.          *
+**************************************************************/
+
+/*
+*	main.cpp - Scallop - system for generating and visualization of attraction areas
+*	of stochastic non-linear attractors. Dso entry point
+*
+*	Version: 0.95
+*	Authors: Egor N. Chashchin
+*	Contact: iqcook@gmail.com
+*
+*/
 #ifdef LINUX
 #define DLLEXPORT
 #define SIZEOF_VOID_P 8

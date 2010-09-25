@@ -1,3 +1,17 @@
+/*************************************************************
+* Copyright (c) 2010 by Egor N. Chashchin. All Rights Reserved.          *
+**************************************************************/
+
+/*
+*	SOP_PickPtc.cpp - Scallop - system for generating and visualization of attraction areas
+*	of stochastic non-linear attractors. SOP_PickPtc - SOP-node for pointcloud splicing
+*
+*	Version: 0.95
+*	Authors: Egor N. Chashchin
+*	Contact: iqcook@gmail.com
+*
+*/
+
 int thecallbackfuncarch(void *data, int index, float time,const PRM_Template *tplate);
 
 #define CHUNCKSIZE 4194304
@@ -210,7 +224,7 @@ class SOP_PickPtc :
 	public SOP_Node
 {
 public:
-	SOP_PickPtc(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry) 
+	SOP_PickPtc(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry)
 	{
 		if (!ifdIndirect) ifdIndirect = allocIndirect(256);
 	};
@@ -246,7 +260,7 @@ PRM_Template SOP_PickPtc::templateList[]=
 	PRM_Template(PRM_INT,1,&chuncksCountName,PRMfourDefaults),
 	PRM_Template(PRM_FILE,1,&savePathName,&savePathDef),
 	PRM_Template(PRM_TOGGLE,1,&tglPlainName,PRMzeroDefaults),
-	PRM_Template(PRM_CALLBACK,	1, &btnSpoolRI, NULL, NULL, NULL,thecallbackfuncarch),	
+	PRM_Template(PRM_CALLBACK,	1, &btnSpoolRI, NULL, NULL, NULL,thecallbackfuncarch),
 
 	PRM_Template()
 };
@@ -280,7 +294,7 @@ OP_ERROR SOP_PickPtc::cookMySop(OP_Context &context)
 	int count = 0;
 	fread(&count,sizeof(int),1,fp);
 	fclose(fp);
-	
+
 	if(count < 1) return error();
 
 	int chunks = evalInt("chunks",&ifdIndirect[1],0,now);
@@ -294,7 +308,7 @@ OP_ERROR SOP_PickPtc::cookMySop(OP_Context &context)
 	//int ecnt = 0;
 
 	int passes = pl.entries()/chunks+1;
-		
+
 	Chunck* C = new Chunck[chunks];
 	//int index = 0;
 	for(int i=0;i<passes;i++)

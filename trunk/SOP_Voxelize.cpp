@@ -1,3 +1,18 @@
+/*************************************************************
+* Copyright (c) 2010 by Egor N. Chashchin. All Rights Reserved.          *
+**************************************************************/
+
+/*
+*	SOP_PickPtc.cpp - Scallop - system for generating and visualization of attraction areas
+*	of stochastic non-linear attractors. SOP_PickPtc - SOP-node for pointcloud voxelizing and
+*	RIB-archive preparing
+*
+*	Version: 0.95
+*	Authors: Egor N. Chashchin
+*	Contact: iqcook@gmail.com
+*
+*/
+
 int thecallbackfuncarchvol(void *data, int index, float time,const PRM_Template *tplate);
 
 class VoxelBox
@@ -12,7 +27,7 @@ public:
 		div[0]=x; div[1]=y; div[2]=z;
 		count = 0;
 	};
-	
+
 	UT_BoundingBox box;
 
 	bool Test(float* data);
@@ -79,7 +94,7 @@ class SOP_Voxelize :
 	public SOP_Node
 {
 public:
-	SOP_Voxelize(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry) 
+	SOP_Voxelize(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry)
 	{
 		if (!ifdIndirect) ifdIndirect = allocIndirect(256);
 	};
@@ -117,7 +132,7 @@ PRM_Template SOP_Voxelize::templateList[]=
 	PRM_Template(PRM_INT,3,&uniformGridName,unfDef),
 	PRM_Template(PRM_FLT,1,&voxelSizeName,&vszDef),
 
-	PRM_Template(PRM_CALLBACK,	1, &btnSpoolVolumeRI, NULL, NULL, NULL,thecallbackfuncarchvol),	
+	PRM_Template(PRM_CALLBACK,	1, &btnSpoolVolumeRI, NULL, NULL, NULL,thecallbackfuncarchvol),
 	PRM_Template(PRM_FILE,1,&savePathName,&savePathDef),
 
 	PRM_Template()

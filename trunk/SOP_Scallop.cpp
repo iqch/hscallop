@@ -1,3 +1,18 @@
+/*************************************************************
+* Copyright (c) 2010 by Egor N. Chashchin. All Rights Reserved.          *
+**************************************************************/
+
+/*
+*	SOP_PickPtc.cpp - Scallop - system for generating and visualization of attraction areas
+*	of stochastic non-linear attractors. SOP_Scallop - main SOP-node for pointcloud producing,
+*	previewing and division map building.
+*
+*	Version: 0.95
+*	Authors: Egor N. Chashchin
+*	Contact: iqcook@gmail.com
+*
+*/
+
 //int thecallbackfuncptc(void *data, int index, float time,const PRM_Template *tplate);
 //int thecallbackfuncbgeo(void *data, int index, float time,const PRM_Template *tplate);
 int thecallbackfuncdiv(void *data, int index, float time,const PRM_Template *tplate);
@@ -11,7 +26,7 @@ class SOP_Scallop :
 	public SOP_Node
 {
 public:
-	SOP_Scallop(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry) 
+	SOP_Scallop(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry)
 	{
 		if (!ifdIndirect) ifdIndirect = allocIndirect(256);
 	};
@@ -108,18 +123,18 @@ static PRM_Name nodeCount("nodecount","Division Node Count");
 static PRM_Name btnSpoolData("spoolscdata", "Save Data");
 
 // RAMP
-static PRM_Name SpValue ("spvalue", "Point value"); 
-static PRM_Name SpOffset ("spoffset", "Point offset"); 
+static PRM_Name SpValue ("spvalue", "Point value");
+static PRM_Name SpOffset ("spoffset", "Point offset");
 static PRM_Name SpInterp ("spinterp", "Point interpolation");
 
 static PRM_Name paramnetricColorName("parmcolor", "Parametric Color");
 static PRM_Name Ramp ("ramp", "Color Ramp");
 
-static PRM_Template RampTemplates[] = { 
-	PRM_Template (PRM_FLT_J, 1, &SpOffset, PRMzeroDefaults), 
-	PRM_Template (PRM_FLT_J, 1, &SpValue, PRMzeroDefaults), 
-	PRM_Template (PRM_INT, 1, &SpInterp, PRMtwoDefaults), 
-	PRM_Template (), 
+static PRM_Template RampTemplates[] = {
+	PRM_Template (PRM_FLT_J, 1, &SpOffset, PRMzeroDefaults),
+	PRM_Template (PRM_FLT_J, 1, &SpValue, PRMzeroDefaults),
+	PRM_Template (PRM_INT, 1, &SpInterp, PRMtwoDefaults),
+	PRM_Template (),
 };
 
 static PRM_Default switcherInfo[] = {
@@ -138,20 +153,20 @@ PRM_Template SOP_Scallop::templateList[]=
 	PRM_Template(PRM_TOGGLE,1,&radiiName,PRMoneDefaults),
 	PRM_Template(PRM_FLT,1,&radiiScaleName,PRMoneDefaults),
 	PRM_Template(PRM_FLT,1,&biasName,&biasDef),
-	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolPtc, NULL, NULL, NULL,thecallbackfuncptc),	
-	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolBgeo, NULL, NULL, NULL,thecallbackfuncbgeo),	
+	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolPtc, NULL, NULL, NULL,thecallbackfuncptc),
+	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolBgeo, NULL, NULL, NULL,thecallbackfuncbgeo),
 	PRM_Template(PRM_TOGGLE,1,&paramnetricColorName,PRMzeroDefaults),
 	PRM_Template (PRM_MULTITYPE_RAMP_RGB, NULL, 1, &Ramp, PRMtwoDefaults),
-	PRM_Template(PRM_CALLBACK,	1, &btnSpoolData, NULL, NULL, NULL,thecallbackfuncdata),	
+	PRM_Template(PRM_CALLBACK,	1, &btnSpoolData, NULL, NULL, NULL,thecallbackfuncdata),
 	PRM_Template(PRM_FILE,1,&savePathName,&savePathDef),
-	PRM_Template(PRM_CALLBACK,	1, &btnSpoolDivBgeo, NULL, NULL, NULL,thecallbackfuncdiv),	
+	PRM_Template(PRM_CALLBACK,	1, &btnSpoolDivBgeo, NULL, NULL, NULL,thecallbackfuncdiv),
 	PRM_Template(PRM_INT,1,&nodeCount,PRM100Defaults),
 	PRM_Template(PRM_FILE,1,&mapPathName,&mapPathDef),
 	PRM_Template(PRM_TOGGLE,1,&mapMedialName,PRMzeroDefaults),
 	PRM_Template(PRM_INT,1,&mapDivName, PRMtenDefaults),
 
 	// DAEMONS
-	PRM_Template(PRM_MULTITYPE_LIST, 
+	PRM_Template(PRM_MULTITYPE_LIST,
 	theBindTemplates, 9, &bindnames[9],
 	PRMzeroDefaults, 0, &PRM_SpareData::multiStartOffsetOne),
 
@@ -179,16 +194,16 @@ struct Methods
 		float Len = sqrt(_P[0]*_P[0]+_P[1]*_P[1]+_P[2]*_P[2]);
 		_P[0] = atan2(_P[0],_P[1]); _P[1] = Len;
 	};
-	static void Swirl(float*_P) 
+	static void Swirl(float*_P)
 	{
 		float Len = sqrt(_P[0]*_P[0]+_P[1]*_P[1]+_P[2]*_P[2]);
 		_P[0] = Len*cos(Len); _P[1] = Len*sin(Len);
 	};
-	static void Trigonometric(float*_P) 
+	static void Trigonometric(float*_P)
 	{
 		_P[2] = cos(abs(_P[2]+_P[0]))-abs(sin(_P[2]+_P[1]));
-		_P[0] = cos(_P[0]); 
-		_P[1] = sin(_P[1]); 
+		_P[0] = cos(_P[0]);
+		_P[1] = sin(_P[1]);
 	};
 };
 
@@ -338,11 +353,11 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 	if(useRamp)
 	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL); 
-		if (ramp.getNodeCount () < 2) 
-		{ 
-			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1)); 
-			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1)); 
+		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
+		if (ramp.getNodeCount () < 2)
+		{
+			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
+			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1));
 		};
 		updateRampFromMultiParm(now, getParm("ramp"), ramp);
 	};
@@ -615,11 +630,11 @@ void SOP_Scallop::SavePtc(float time)
 
 	if(useRamp)
 	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL); 
-		if (ramp.getNodeCount () < 2) 
-		{ 
-			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1)); 
-			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1)); 
+		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
+		if (ramp.getNodeCount () < 2)
+		{
+			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
+			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1));
 		};
 		updateRampFromMultiParm(now, getParm("ramp"), ramp);
 	};
@@ -1047,7 +1062,7 @@ public:
 		, p(limit)
 		, count(0)
 		{};
-	~BoundBox() 
+	~BoundBox()
 	{
 		if(b != NULL) delete [] b;
 	};
@@ -1247,7 +1262,7 @@ struct OctreeBox
 	OctreeBox(int _l) : level(_l), C(NULL), filled(false), count(0), radius(0.0f) {};
 
 	bool Insert(float*P);
-	
+
 	~OctreeBox();
 
 	UT_BoundingBox bbox;
@@ -1298,7 +1313,7 @@ bool OctreeBox::Insert(float*P)
 		if(P[3] > radius) radius = P[3];
 		count++;
 	};
-	
+
 	return true;
 };
 
@@ -1611,11 +1626,11 @@ void SOP_Scallop::SaveData(float time)
 
 	if(useRamp)
 	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL); 
-		if (ramp.getNodeCount () < 2) 
-		{ 
-			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1)); 
-			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1)); 
+		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
+		if (ramp.getNodeCount () < 2)
+		{
+			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
+			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1));
 		};
 		updateRampFromMultiParm(now, getParm("ramp"), ramp);
 	};

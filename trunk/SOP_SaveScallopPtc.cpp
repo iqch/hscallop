@@ -1,3 +1,17 @@
+/*************************************************************
+* Copyright (c) 2010 by Egor N. Chashchin. All Rights Reserved.          *
+**************************************************************/
+
+/*
+*	SOP_PickPtc.cpp - Scallop - system for generating and visualization of attraction areas
+*	of stochastic non-linear attractors. SOP_SaveScallopPtc - SOP-node for pointcloud saving
+*
+*	Version: 0.95
+*	Authors: Egor N. Chashchin
+*	Contact: iqcook@gmail.com
+*
+*/
+
 //#define INT_PARM(name, idx, vi, t) { return evalInt(name, &ifdIndirect[idx], vi, t); }
 //#define STR_PARM(str, name, idx, vi, t) { evalString(str, name, &ifdIndirect[idx], vi, (float)t); }
 
@@ -5,7 +19,7 @@ class SOP_SaveScallopPtc :
 	public SOP_Node
 {
 public:
-	SOP_SaveScallopPtc(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry) 
+	SOP_SaveScallopPtc(OP_Network *net, const char *name, OP_Operator *entry) : SOP_Node(net,name,entry)
 	{
 		if (!ifdIndirect) ifdIndirect = allocIndirect(256);
 	};

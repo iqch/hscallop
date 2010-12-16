@@ -168,7 +168,7 @@ OP_ERROR SOP_Voxelize::cookMySop(OP_Context &context)
 
 	if(count < 1) return error();
 
-	int cdi = gdp->addDiffuseAttribute(GEO_PRIMITIVE_DICT);
+	GB_AttributeRef cdi = gdp->addDiffuseAttribute(GEO_PRIMITIVE_DICT);
 
 	int chunks = evalInt("chunks",&ifdIndirect[1],0,now);
 
@@ -298,11 +298,10 @@ void SOP_Voxelize::SaveVolArchive(float now)
 	ofstream fout( buf.buffer()/*, ios_base::out*/);
 
 	float radius = 0;
-	int rt = input->findAttrib("radius",4,GB_ATTRIB_FLOAT);
-	if(rt != -1)
+	GB_AttributeRef rt = input->findAttrib("radius",4,GB_ATTRIB_FLOAT);
+	if(GBisAttributeRefValid(rt))
 	{
-		const float *attrib_data = (const float *) input->attribs().getAttribData(rt);
-		radius=*attrib_data;
+		radius = input->attribs().getElement().castAttribData<float>(rt)[0];
 	};
 
 	bool useDim = (evalInt("useunfgr",&ifdIndirect[2],0,now)!= 0);

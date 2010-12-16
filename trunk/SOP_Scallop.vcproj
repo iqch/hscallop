@@ -40,7 +40,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="$(HOUDINI)\include;$(RMANTREE)\include"
+				AdditionalIncludeDirectories="$(HOUDINI)\include"
 				PreprocessorDefinitions="UNICODE,WIN32,QT_LARGEFILE_SUPPORT,QT_THREAD_SUPPORT,QT_NO_DEBUG,NDEBUG,QT_CORE_LIB,QT_XML_LIB"
 				RuntimeLibrary="2"
 				StructMemberAlignment="5"
@@ -59,9 +59,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libprman.lib libCVEX.a libSOP.a libSYS.a libGEO.a libGB.a libUT.a libPRM.a libOP.a libGU.a"
-				OutputFile="$(USERPROFILE)\My Documents\houdini10.0\dso\$(ProjectName).dll"
-				AdditionalLibraryDirectories="$(HOUDINI)\lib;$(RMANTREE)\lib"
+				AdditionalDependencies="libCVEX.a libSOP.a libSYS.a libGEO.a libGB.a libUT.a libPRM.a libOP.a libGU.a"
+				OutputFile="$(USERPROFILE)\Documents\houdini11.0\dso\$(ProjectName).dll"
+				AdditionalLibraryDirectories="$(HOUDINI)\lib"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 			/>
@@ -114,7 +114,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(HOUDINI)\include;$(RMANTREE)\include"
+				AdditionalIncludeDirectories="&quot;$(HOUDINI)\include&quot;"
 				PreprocessorDefinitions="UNICODE,WIN32,QT_LARGEFILE_SUPPORT,QT_THREAD_SUPPORT,QT_CORE_LIB,QT_XML_LIB"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
@@ -131,9 +131,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libprman.lib libCVEX.a libSOP.a libSYS.a libGEO.a libGB.a libUT.a libPRM.a libOP.a libGU.a"
-				OutputFile="$(USERPROFILE)\My Documents\houdini10.0\dso\$(ProjectName).dll"
-				AdditionalLibraryDirectories="$(HOUDINI)\lib;$(RMANTREE)\lib"
+				AdditionalDependencies="libCVEX.a libSOP.a libSYS.a libGEO.a libGB.a libUT.a libPRM.a libOP.a libGU.a"
+				OutputFile="$(USERPROFILE)\Documents\houdini11.0\dso\$(ProjectName).dll"
+				AdditionalLibraryDirectories="&quot;$(HOUDINI)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 			/>

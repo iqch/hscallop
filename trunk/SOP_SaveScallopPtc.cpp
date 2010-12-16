@@ -82,25 +82,25 @@ OP_ERROR SOP_SaveScallopPtc::cookMySop(OP_Context &context)
 	if(lockInputs(context) >= UT_ERROR_ABORT) return error();
 	const GU_Detail* input = inputGeo(0,context);
 
-	int dt = input->findDiffuseAttribute(GEO_POINT_DICT);
-	int wt = input->findPointAttrib("width",GB_ATTRIB_FLOAT);
-	int pt = input->findPointAttrib("parameter",GB_ATTRIB_FLOAT);
+	GB_AttributeRef dt = input->findDiffuseAttribute(GEO_POINT_DICT);
+	GB_AttributeRef wt = input->findPointAttrib("width",GB_ATTRIB_FLOAT);
+	GB_AttributeRef pt = input->findPointAttrib("parameter",GB_ATTRIB_FLOAT);
 
-	if(dt == -1)
+	if(!GBisAttributeRefValid(dt))
 	{
 		// NOTHING TO SAVE!
 		unlockInputs();
 		return error();
 	};
 
-	if(wt == -1)
+	if(!GBisAttributeRefValid(wt))
 	{
 		// NOTHING TO SAVE!
 		unlockInputs();
 		return error();
 	};
 
-	if(pt == -1)
+	if(!GBisAttributeRefValid(pt))
 	{
 		// NOTHING TO SAVE!
 		unlockInputs();

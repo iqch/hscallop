@@ -19,15 +19,14 @@
 #endif
 #define MAKING_DSO
 
+#define SESI_LITTLE_ENDIAN 1
+
 // CRT
 #include <limits.h>
 #include <strstream>
 
 #include <iostream>
 using namespace std;
-
-// RI
-//#include <pointcloud.h>
 
 // H
 #include <UT/UT_DSOVersion.h>
@@ -38,6 +37,7 @@ using namespace std;
 #include <SOP/SOP_Node.h>
 
 #include <PRM/PRM_Include.h>
+#include <PRM/PRM_Template.h>
 #include <PRM/PRM_SpareData.h>
 #include <PRM/PRM_ChoiceList.h>
 

@@ -212,7 +212,8 @@ typedef void  (*NonLinear)(float*);
 struct Daemon
 {
 	NonLinear method;
-	UT_Matrix4 xform;
+	//UT_Matrix4 xform;
+	UT_DMatrix4 xform;
 	float c[3];
 	float weight;
 	float range[2];
@@ -353,7 +354,7 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 	if(useRamp)
 	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
+		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL, NULL);
 		if (ramp.getNodeCount () < 2)
 		{
 			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
@@ -405,7 +406,8 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 		addExtraInput(obj, OP_INTEREST_DATA);
 
-		d.xform  = obj->getWorldTransform(context);
+		//d.xform  = obj->getWorldTransform(context); // 10.0
+		obj->getWorldTransform(d.xform, context);
 
 		d.weight = evalFloatInst("weight#",&i,0,now);
 
@@ -477,9 +479,9 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 	total >>= degr;
 
-	int cntt = gdp->addAttrib("count",4,GB_ATTRIB_INT,&total);
+	GB_AttributeRef cntt = gdp->addAttrib("count",4,GB_ATTRIB_INT,&total);
 
-	int dt = gdp->addDiffuseAttribute(GEO_POINT_DICT);
+	GB_AttributeRef dt = gdp->addDiffuseAttribute(GEO_POINT_DICT);
 	gdp->addVariableName("Cd","Cd");
 
 	UT_Vector3 current(0,0,0);
@@ -488,18 +490,18 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 	float R=1.0f;
 	bool trackRadii = (evalInt("trackradii",0,now)!=0);
 	float rScale = evalFloat("radiiscale",0,now);
-	int rt = -1;
+	GB_AttributeRef rt;
 	if(trackRadii)
 	{
 		float one=1.0f;
 		rt = gdp->addPointAttrib("width",4,GB_ATTRIB_FLOAT,&one);
-		if(rt == -1) trackRadii=false;
+		if(!GBisAttributeRefValid(rt)) trackRadii=false;
 		else gdp->addVariableName("width","WIDTH");
 	};
 
 	float zero=0.0f;
-	int pt = gdp->addPointAttrib("parameter",4,GB_ATTRIB_FLOAT,&zero);
-	if(pt!=-1) gdp->addVariableName("parameter","PARAMETER");
+	GB_AttributeRef pt = gdp->addPointAttrib("parameter",4,GB_ATTRIB_FLOAT,&zero);
+	if(GBisAttributeRefValid(pt)) gdp->addVariableName("parameter","PARAMETER");
 	float param=0.0f;
 
 	srand(0);
@@ -546,7 +548,7 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 				*_R=rScale*R;
 			};
 
-			if(pt!=-1)
+			if(GBisAttributeRefValid(pt))
 			{
 				float* _p = p->castAttribData<float>(pt);
 				*_p=param;
@@ -560,7 +562,6 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 	return error();
 };
-
 
 static float data[4];
 static float* G = data+3;
@@ -1214,9 +1215,9 @@ void BoundBox::Build(GU_Detail& gdp)
 	{
 		if(count < 1) return;
 
-		int at = gdp.addPrimAttrib("count",4,GB_ATTRIB_INT,&count);
+		GB_AttributeRef at = gdp.addPrimAttrib("count",4,GB_ATTRIB_INT,&count);
 
-		int rt = gdp.addAttrib("radius",4,GB_ATTRIB_FLOAT,&radius);
+		GB_AttributeRef rt = gdp.addAttrib("radius",4,GB_ATTRIB_FLOAT,&radius);
 
 		// SETUP BBOX
 		Collapse();
@@ -1225,7 +1226,7 @@ void BoundBox::Build(GU_Detail& gdp)
 		int div[3] = {1,1,1};
 		GEO_Primitive* pl = GU_PrimVolume::buildFromFunction(&gdp,func,bbox,div[0],div[1],div[2]);
 
-		if(at != -1)
+		if(GBisAttributeRefValid(at))
 		{
 			int* ct = pl->castAttribData<int>(at);
 			*ct = count;
@@ -1269,7 +1270,7 @@ struct OctreeBox
 
 	void Build(GU_Detail& gdp);
 
-	static int at, rt;
+	static GB_AttributeRef at, rt;
 
 private:
 	OctreeBox() : C(NULL), filled(false), count(0), radius(0.0f) {};
@@ -1285,8 +1286,8 @@ private:
 	void Split();
 };
 
-int OctreeBox::at=-1;
-int OctreeBox::rt=-1;
+GB_AttributeRef OctreeBox::at;
+GB_AttributeRef OctreeBox::rt;
 
 OctreeBox::~OctreeBox()
 {
@@ -1356,13 +1357,13 @@ void OctreeBox::Build(GU_Detail& gdp)
 		int div[3] = {1,1,1};
 		GEO_Primitive* pl = GU_PrimVolume::buildFromFunction(&gdp,func,bbox,div[0],div[1],div[2]);
 
-		if(at != -1)
+		if(GBisAttributeRefValid(at))
 		{
 			int* ct = pl->castAttribData<int>(at);
 			*ct = count;
 		};
 
-		if(rt != -1)
+		if(GBisAttributeRefValid(rt))
 		{
 			float* ct = pl->castAttribData<float>(rt);
 			*ct = radius;
@@ -1436,7 +1437,7 @@ void SOP_Scallop::SaveDivMap(float time)
 
 		if(obj == NULL) continue;
 
-		d.xform  = obj->getWorldTransform(context);
+		obj->getWorldTransform(d.xform,context);
 
 		d.weight = evalFloatInst("weight#",&i,0,now);
 
@@ -1626,7 +1627,7 @@ void SOP_Scallop::SaveData(float time)
 
 	if(useRamp)
 	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
+		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL, NULL);
 		if (ramp.getNodeCount () < 2)
 		{
 			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
@@ -1666,7 +1667,7 @@ void SOP_Scallop::SaveData(float time)
 
 		if(obj == NULL) continue;
 
-		d.xform  = obj->getWorldTransform(context);
+		obj->getWorldTransform(d.xform,context);
 
 		d.weight = evalFloatInst("weight#",&i,0,now);
 

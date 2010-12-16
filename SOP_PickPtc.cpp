@@ -389,11 +389,12 @@ void SOP_PickPtc::SaveArchive(float now)
 	ofstream fout( buf.buffer()/*, ios_base::out*/);
 
 	float radius = 0;
-	int rt = input->findAttrib("radius",4,GB_ATTRIB_FLOAT);
-	if(rt != -1)
+	GB_AttributeRef rt = input->findAttrib("radius",4,GB_ATTRIB_FLOAT);
+	if(GBisAttributeRefValid(rt))
 	{
-		const float *attrib_data = (const float *) input->attribs().getAttribData(rt);
-		radius=*attrib_data;
+		//GB_AttributeData& data = 
+		radius = input->attribs().getElement().castAttribData<float>(rt)[0];
+		//radius=*attrib_data;
 	};
 
 	for(int i=0;i<cnt;i++)

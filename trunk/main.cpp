@@ -6,7 +6,7 @@
 *	main.cpp - Scallop - system for generating and visualization of attraction areas
 *	of stochastic non-linear attractors. Dso entry point
 *
-*	Version: 0.95
+*	Version: 0.97
 *	Authors: Egor N. Chashchin
 *	Contact: iqcook@gmail.com
 *
@@ -22,6 +22,8 @@
 #define SESI_LITTLE_ENDIAN 1
 
 // CRT
+#include <sys\stat.h>
+
 #include <limits.h>
 #include <strstream>
 
@@ -56,9 +58,6 @@ using namespace std;
 #include <SHOP/SHOP_Node.h>
 
 #include "SOP_Scallop.cpp"
-#include "SOP_SaveScallopPtc.cpp"
-#include "SOP_PickPtc.cpp"
-#include "SOP_Voxelize.cpp"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -68,16 +67,16 @@ void newSopOperator(OP_OperatorTable *table)
 		"hdk_scallop","Scallop",
 		SOP_Scallop::creator,SOP_Scallop::templateList,
 		0,1));
-	table->addOperator(new OP_Operator(
-		"hdk_savescallopptc","Scallop: Save Ptc",
-		SOP_SaveScallopPtc::creator,SOP_SaveScallopPtc::templateList,
-		1,1));
-	table->addOperator(new OP_Operator(
-		"hdk_pickptc","Scallop: Copy from Ptc",
-		SOP_PickPtc::creator,SOP_PickPtc::templateList,
-		1,1));
-	table->addOperator(new OP_Operator(
-		"hdk_voxelizeptc","Scallop: Voxelize",
-		SOP_Voxelize::creator,SOP_Voxelize::templateList,
-		1,1));
+	//table->addOperator(new OP_Operator(
+	//	"hdk_savescallopptc","Scallop: Save Ptc",
+	//	SOP_SaveScallopPtc::creator,SOP_SaveScallopPtc::templateList,
+	//	1,1));
+	//table->addOperator(new OP_Operator(
+	//	"hdk_pickptc","Scallop: Copy from Ptc",
+	//	SOP_PickPtc::creator,SOP_PickPtc::templateList,
+	//	1,1));
+	//table->addOperator(new OP_Operator(
+	//	"hdk_voxelizeptc","Scallop: Voxelize",
+	//	SOP_Voxelize::creator,SOP_Voxelize::templateList,
+	//	1,1));
 }

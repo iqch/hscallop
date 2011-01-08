@@ -7,14 +7,12 @@
 *	of stochastic non-linear attractors. SOP_Scallop - main SOP-node for pointcloud producing,
 *	previewing and division map building.
 *
-*	Version: 0.95
+*	Version: 0.97
 *	Authors: Egor N. Chashchin
 *	Contact: iqcook@gmail.com
 *
 */
 
-//int thecallbackfuncptc(void *data, int index, float time,const PRM_Template *tplate);
-//int thecallbackfuncbgeo(void *data, int index, float time,const PRM_Template *tplate);
 int thecallbackfuncdiv(void *data, int index, float time,const PRM_Template *tplate);
 int thecallbackfuncdata(void *data, int index, float time,const PRM_Template *tplate);
 
@@ -35,8 +33,6 @@ public:
 	static OP_Node	*creator(OP_Network  *net, const char *name,	OP_Operator *entry);
 	static PRM_Template	 templateList[];
 
-	//void SavePtc(float time);
-	//void SaveBgeo(float time);
 	void SaveDivMap(float time);
 	void SaveData(float time);
 
@@ -116,8 +112,6 @@ PRM_Name radiiScaleName("radiiscale","Radii Scale");
 PRM_Name biasName("bias","Parameter Bias");
 PRM_Default biasDef(0.5f,"");
 
-//static PRM_Name btnSpoolPtc("spoolptc", "Save Ptc");
-//static PRM_Name btnSpoolBgeo("spoolbgeo", "Save Bgeo");
 static PRM_Name btnSpoolDivBgeo("spooldivbgeo", "Save Division Map");
 static PRM_Name nodeCount("nodecount","Division Node Count");
 static PRM_Name btnSpoolData("spoolscdata", "Save Data");
@@ -139,7 +133,6 @@ static PRM_Template RampTemplates[] = {
 
 static PRM_Default switcherInfo[] = {
 	PRM_Default( 14, "Setup"),
-	//PRM_Default( 13, "Setup"),
 	PRM_Default( 1, "Daemons")
 };
 
@@ -153,8 +146,6 @@ PRM_Template SOP_Scallop::templateList[]=
 	PRM_Template(PRM_TOGGLE,1,&radiiName,PRMoneDefaults),
 	PRM_Template(PRM_FLT,1,&radiiScaleName,PRMoneDefaults),
 	PRM_Template(PRM_FLT,1,&biasName,&biasDef),
-	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolPtc, NULL, NULL, NULL,thecallbackfuncptc),
-	//PRM_Template(PRM_CALLBACK,	1, &btnSpoolBgeo, NULL, NULL, NULL,thecallbackfuncbgeo),
 	PRM_Template(PRM_TOGGLE,1,&paramnetricColorName,PRMzeroDefaults),
 	PRM_Template (PRM_MULTITYPE_RAMP_RGB, NULL, 1, &Ramp, PRMtwoDefaults),
 	PRM_Template(PRM_CALLBACK,	1, &btnSpoolData, NULL, NULL, NULL,thecallbackfuncdata),
@@ -212,7 +203,6 @@ typedef void  (*NonLinear)(float*);
 struct Daemon
 {
 	NonLinear method;
-	//UT_Matrix4 xform;
 	UT_DMatrix4 xform;
 	float c[3];
 	float weight;
@@ -258,13 +248,6 @@ void Daemon::SetupCVEX(UT_String script)
 
 	char *argv[4096];
 	int argc = vexsrc.parse(argv, 4096);
-
-	/*cout << "VEX: ";
-	for(int i=0;i<argc;i++)
-	{
-		cout << argv[i] << "  ";
-	};
-	cout << endl;*/
 
 	OP_Caller	C(caller);
 	context.setOpCaller(&C);
@@ -565,436 +548,7 @@ OP_ERROR SOP_Scallop::cookMySop(OP_Context &context)
 
 static float data[4];
 static float* G = data+3;
-/*int thecallbackfuncptc(void *data, int index, float time,const PRM_Template *tplate)
-{
-	SOP_Scallop *me = (SOP_Scallop *) data;
-	me->SavePtc(time);
-	return 0;
-};
 
-static char* vartypes[] = { "color", "float" };
-static char* varnames[] = { "Ci", "parameter" };
-
-static float I[16] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
-
-static float W2E[16] = { 0.018000, -0.327452, -0.944696, 0.000000, -0.000000, 0.944850, -0.327505, 0.000000, -0.999838, -0.005895, -0.017007, 0.000000, -0.096779, 0.084522, 11.740897, 1.000000 };
-static float W2NDC[16] = {
-	0.043674, -0.794524, -0.944697, -0.944696,
-	-0.000000, 2.292567, -0.327505, -0.327505,
-	-2.425990, -0.014304, -0.017007, -0.017007,
-	-0.234824, 0.205082, 11.730909, 11.740897
-};
-
-static float format[3] = {1024, 1024, 1};
-
-static float N[3] = {0, 0, 0};
-
-static float data[4];
-static float* G = data+3;
-
-void SOP_Scallop::SavePtc(float time)
-{
-	OP_Context context(time);
-
-	bool clip = (lockInputs(context) < UT_ERROR_ABORT);
-
-	UT_BoundingBox bbox;
-
-	if(clip)
-	{
-		const GU_Detail* input = inputGeo(0,context);
-		if(input != NULL)
-		{
-			//UT_Matrix4 bm;
-			int res = input->getBBox(&bbox);
-			if(res == 0) clip = false;
-		}
-		else clip = false;
-		unlockInputs();
-	};
-
-	UT_String file;
-	STR_PARM(file,"path", 4, 0, time);
-	PtcPointCloud ptc = PtcCreatePointCloudFile(file.buffer(),
-		2, vartypes, varnames,
-		W2E, W2NDC, format);
-
-	if(ptc == NULL) return;
-
-	float& now=time;
-	//////////////////////////////////////////////////////////////////////////
-
-	UT_Ramp ramp;
-	float   rampout[4];
-
-	bool useRamp = (evalInt("parmcolor",0,now)!=0);
-
-	if(useRamp)
-	{
-		PRM_Template *rampTemplate = PRMgetRampTemplate ("ramp", PRM_MULTITYPE_RAMP_RGB, NULL);
-		if (ramp.getNodeCount () < 2)
-		{
-			ramp.addNode (0, UT_FRGBA (0, 0, 0, 1));
-			ramp.addNode (1, UT_FRGBA (1, 1, 1, 1));
-		};
-		updateRampFromMultiParm(now, getParm("ramp"), ramp);
-	};
-
-	Daemon::now=now;
-	//Daemon::caller=this;
-
-	Daemon::bias = evalFloat("bias",0,now);
-
-	int cnt = evalInt("daemons", 0, now);
-
-	Daemon* daemons=new Daemon[cnt];
-
-	float weights = 0;
-
-	int totd=0;
-
-	for(int i=1;i<=cnt;i++)
-	{
-		bool skip = (evalIntInst("enabled#",&i,0,now)==0);
-		if(skip) continue;
-
-		Daemon& d = daemons[totd];
-
-		UT_String path = "";
-		evalStringInst("obj#", &i, path, 0, now);
-
-		if(path == "") continue;
-
-		SOP_Node* node = getSOPNode(path);
-
-		OBJ_Node* obj = dynamic_cast<OBJ_Node*>(node->getParent());
-
-		if(obj == NULL) continue;
-
-		d.xform  = obj->getWorldTransform(context);
-
-		d.weight = evalFloatInst("weight#",&i,0,now);
-
-		d.c[0] = evalFloatInst("color#",&i,0,now);
-		d.c[1] = evalFloatInst("color#",&i,1,now);
-		d.c[2] = evalFloatInst("color#",&i,2,now);
-
-		int mth = evalIntInst("model#",&i,0,now);
-
-		switch(mth)
-		{
-		case 1:
-			d.method = Methods::Spherical;
-			break;
-		case 2:
-			d.method = Methods::Polar;
-			break;
-		case 3:
-			d.method = Methods::Swirl;
-			break;
-		case 4:
-			d.method = Methods::Trigonometric;
-			break;
-		case 5:
-			{
-				UT_String script;
-				evalStringInst("vexcode#", &i, script, 0, now);
-				d.SetupCVEX(script);
-
-				break;
-			}
-		case 0:
-		default:
-			d.method = Methods::Linear;
-		};
-
-		d.power = evalFloatInst("power#",&i,0,now);
-		d.radius = evalFloatInst("radius#",&i,0,now);
-		d.parameter = evalFloatInst("parameter#",&i,0,now);
-
-		weights+=d.weight;
-		totd++;
-	};
-
-	if(totd == 0)
-	{
-		delete [] daemons;
-		return;
-	}
-
-	float base = 0.0;
-	for(int i=0;i<totd;i++)
-	{
-		Daemon& d = daemons[i];
-		d.range[0]=base;
-		d.range[1] = base+d.weight/weights;
-		base=d.range[1];
-	};
-
-	int total = evalInt("count",0,now);
-
-	UT_Vector3 current(0,0,0);
-	float* C = data;
-
-	float R=1.0f;
-	float rScale = evalFloat("radiiscale",0,now);
-
-	float param=0.0f;
-
-	srand(0);
-
-	for(int i=-50;i<total;i++)
-	{
-		bool ok = false;
-
-		float w = double(rand())/double(RAND_MAX);
-
-		for(int j=0;j<totd;j++)
-		{
-			ok = daemons[j].Transform(w,current,C,R,*G);
-			if(ok) break;
-		};
-
-		if(i<0) continue;
-
-		if(clip)
-		{
-			if(!bbox.isInside(current)) continue;
-		};
-
-		if(ok)
-		{
-			if(useRamp)
-			{
-				float out[4];
-				ramp.rampLookup(data[3],out);
-				memcpy(data,out,12);
-			}
-			if(PtcWriteDataPoint(ptc,current.vec,N,R*rScale,data) == 0) break;
-		};
-	};
-
-	delete [] daemons;
-
-	//////////////////////////////////////////////////////////////////////////
-
-	PtcFinishPointCloudFile(ptc);
-};
-
-
-int thecallbackfuncbgeo(void *data, int index, float time,const PRM_Template *tplate)
-{
-	SOP_Scallop *me = (SOP_Scallop *) data;
-	me->SaveBgeo(time);
-	return 0;
-};
-void SOP_Scallop::SaveBgeo(float time)
-{
-	OP_Context context(time);
-
-	bool clip = (lockInputs(context) < UT_ERROR_ABORT);
-
-	UT_BoundingBox bbox;
-
-	if(clip)
-	{
-		const GU_Detail* input = inputGeo(0,context);
-		if(input != NULL)
-		{
-			//UT_Matrix4 bm;
-			int res = input->getBBox(&bbox);
-			if(res == 0) clip = false;
-		}
-		else clip = false;
-		unlockInputs();
-	};
-
-	UT_String file;
-	STR_PARM(file,"path", 4, 0, time);
-
-	float& now=time;
-	//////////////////////////////////////////////////////////////////////////
-
-	Daemon::now=now;
-	//Daemon::caller=this;
-
-	Daemon::bias = evalFloat("bias",0,now);
-
-	int cnt = evalInt("daemons", 0, now);
-
-	Daemon* daemons=new Daemon[cnt];
-
-	float weights = 0;
-
-	int totd=0;
-
-	for(int i=1;i<=cnt;i++)
-	{
-		bool skip = (evalIntInst("enabled#",&i,0,now)==0);
-		if(skip) continue;
-
-		Daemon& d = daemons[totd];
-
-		UT_String path = "";
-		evalStringInst("obj#", &i, path, 0, now);
-
-		if(path == "") continue;
-
-		SOP_Node* node = getSOPNode(path);
-
-		OBJ_Node* obj = dynamic_cast<OBJ_Node*>(node->getParent());
-
-		if(obj == NULL) continue;
-
-		d.xform  = obj->getWorldTransform(context);
-
-		d.weight = evalFloatInst("weight#",&i,0,now);
-
-		d.c[0] = evalFloatInst("color#",&i,0,now);
-		d.c[1] = evalFloatInst("color#",&i,1,now);
-		d.c[2] = evalFloatInst("color#",&i,2,now);
-
-		int mth = evalIntInst("model#",&i,0,now);
-
-		switch(mth)
-		{
-		case 1:
-			d.method = Methods::Spherical;
-			break;
-		case 2:
-			d.method = Methods::Polar;
-			break;
-		case 3:
-			d.method = Methods::Swirl;
-			break;
-		case 4:
-			d.method = Methods::Trigonometric;
-			break;
-		case 5:
-			{
-				UT_String script;
-				evalStringInst("vexcode#", &i, script, 0, now);
-				d.SetupCVEX(script);
-
-				break;
-			}
-		case 0:
-		default:
-			d.method = Methods::Linear;
-		};
-
-		d.power = evalFloatInst("power#",&i,0,now);
-		d.radius = evalFloatInst("radius#",&i,0,now);
-		d.parameter = evalFloatInst("parameter#",&i,0,now);
-
-		weights+=d.weight;
-		totd++;
-	};
-
-	if(totd == 0)
-	{
-		delete [] daemons;
-		return;
-	}
-
-	float base = 0.0;
-	for(int i=0;i<totd;i++)
-	{
-		Daemon& d = daemons[i];
-		d.range[0]=base;
-		d.range[1] = base+d.weight/weights;
-		base=d.range[1];
-	};
-
-	int total = evalInt("count",0,now);
-
-	GU_Detail det;
-
-	bool showPts = (evalInt("showpts",0,now)!=0);
-
-	if(showPts)
-	{
-		float sz = evalInt("ptssz",0,now);
-		if(sz > 0)
-		{
-			float one = 1.0f;
-			det.addAttrib("showpoints",4,GB_ATTRIB_FLOAT,&one);
-			det.addAttrib("revealsize",4,GB_ATTRIB_FLOAT,&sz);
-		};
-	};
-
-	int dt = det.addDiffuseAttribute(GEO_POINT_DICT);
-	det.addVariableName("Cd","Cd");
-
-	UT_Vector3 current(0,0,0);
-	float C[3] = { 0,0,0 };
-
-	float R=1.0f;
-	bool trackRadii = (evalInt("trackradii",0,now)!=0);
-	int rt = -1;
-	if(trackRadii)
-	{
-		float one=1.0f;
-		rt = det.addPointAttrib("width",4,GB_ATTRIB_FLOAT,&one);
-		if(rt == -1) trackRadii=false;
-		else det.addVariableName("width","WIDTH");
-	};
-
-	float zero=0.0f;
-	int pt = det.addPointAttrib("parameter",4,GB_ATTRIB_FLOAT,&zero);
-	if(pt!=-1) det.addVariableName("parameter","PARAMETER");
-	float param=0.0f;
-
-	srand(0);
-
-	for(int i=-50;i<total;i++)
-	{
-		bool ok = false;
-
-		float w = double(rand())/double(RAND_MAX);
-
-		for(int j=0;j<totd;j++)
-		{
-			ok = daemons[j].Transform(w,current,C,R,param);
-			if(ok) break;
-		};
-
-		if(i<0) continue;
-
-		if(clip)
-		{
-			if(!bbox.isInside(current)) continue;
-		};
-
-		if(ok)
-		{
-			GEO_Point* p = det.appendPoint();
-			p->setPos(current);
-
-			float* Cd=p->castAttribData<float>(dt);
-			memcpy(Cd,C,12);
-
-			if(trackRadii)
-			{
-				float* _R = p->castAttribData<float>(rt);
-				*_R=R;
-			};
-
-			if(pt!=-1)
-			{
-				float* _p = p->castAttribData<float>(pt);
-				*_p=param;
-			}
-		};
-	};
-
-	delete [] daemons;
-
-	//////////////////////////////////////////////////////////////////////////
-
-	det.save(file.buffer(),1,NULL);
-	//PtcFinishPointCloudFile(ptc);
-};*/
 int thecallbackfuncdiv(void *data, int index, float time,const PRM_Template *tplate)
 {
 	SOP_Scallop *me = (SOP_Scallop *) data;
@@ -1106,6 +660,8 @@ bool BoundBox::CheckPoint(float* P)
 	if(P[1]>=bounds[4]) return false;
 	if(P[2]<bounds[2]) return false;
 	if(P[2]>=bounds[5]) return false;
+
+	p.limit = limit;
 
 	if(!splitted)
 	{
@@ -1270,7 +826,10 @@ struct OctreeBox
 
 	void Build(GU_Detail& gdp);
 
-	static GB_AttributeRef at, rt;
+	static GB_AttributeRef at, rt, it, bt;
+
+	static UT_BoundingBox parentbbox;
+	static int maxlevel;
 
 private:
 	OctreeBox() : C(NULL), filled(false), count(0), radius(0.0f) {};
@@ -1288,6 +847,11 @@ private:
 
 GB_AttributeRef OctreeBox::at;
 GB_AttributeRef OctreeBox::rt;
+GB_AttributeRef OctreeBox::it;
+GB_AttributeRef OctreeBox::bt;
+
+int OctreeBox::maxlevel = 1;
+UT_BoundingBox OctreeBox::parentbbox;
 
 OctreeBox::~OctreeBox()
 {
@@ -1368,6 +932,15 @@ void OctreeBox::Build(GU_Detail& gdp)
 			float* ct = pl->castAttribData<float>(rt);
 			*ct = radius;
 		};
+
+		if(GBisAttributeRefValid(it))
+		{
+			int* ct = pl->castAttribData<int>(it);
+			ct[0] = float(bbox.centerX()-parentbbox.xmin())/parentbbox.sizeX()*maxlevel;
+			ct[1] = float(bbox.centerY()-parentbbox.ymin())/parentbbox.sizeY()*maxlevel;
+			ct[2] = float(bbox.centerZ()-parentbbox.zmin())/parentbbox.sizeZ()*maxlevel;
+		};
+
 	}
 	else
 	{
@@ -1468,7 +1041,7 @@ void SOP_Scallop::SaveDivMap(float time)
 				d.SetupCVEX(script);
 
 				break;
-			}
+			};
 		case 0:
 		default:
 			d.method = Methods::Linear;
@@ -1488,7 +1061,7 @@ void SOP_Scallop::SaveDivMap(float time)
 	{
 		delete [] daemons;
 		return;
-	}
+	};
 
 	float base = 0.0;
 	for(int i=0;i<totd;i++)
@@ -1519,24 +1092,24 @@ void SOP_Scallop::SaveDivMap(float time)
 	bool medial = (evalInt("mapmedial",0,now)!=0);
 	int mapdiv = evalInt("mapdiv",0,now);
 
-	BoundBox Box;
+	//BoundBox Box;
 	OctreeBox O(mapdiv);
 
-	if(medial)
-	{
+	//if(medial)
+	//{
 		O.bbox=bbox;
-	}
-	else
-	{
-		BoundBox::limit = evalInt("nodecount", 0, now);
+	//}
+	//else
+	//{
+	//	BoundBox::limit = evalInt("nodecount", 0, now);
 
-		BoundBox::medial = (evalInt("mapmedial",0,now)!=0);
+	//	BoundBox::medial = (evalInt("mapmedial",0,now)!=0);
 
-		float boxb[6];
-		memcpy(boxb,bbox.minvec().vec,12);
-		memcpy(boxb+3,bbox.maxvec().vec,12);
-		Box.Organize(boxb);
-	};
+	//	float boxb[6];
+	//	memcpy(boxb,bbox.minvec().vec,12);
+	//	memcpy(boxb+3,bbox.maxvec().vec,12);
+	//	Box.Organize(boxb);
+	//};
 
 	for(int i=-50;i<total;i++)
 	{
@@ -1552,34 +1125,82 @@ void SOP_Scallop::SaveDivMap(float time)
 
 		if(i<0) continue;
 
-		if(medial)
-		{
+		//if(medial)
+		//{
 			float P[4] = { current.x(), current.y(), current.z(), R };
 			O.Insert(P);
-		}
-		else
-		{
-			Box.CheckPoint(current.vec);
-		}
+		//}
+		//else
+		//{
+		//	Box.CheckPoint(current.vec);
+		//}
 	};
 
 	delete [] daemons;
 
 	//////////////////////////////////////////////////////////////////////////
 
-	if(medial)
-	{
+	int ita[3] = {-1,-1,-1};
+
+	//if(medial)
+	//{
 		int count = 0;
 		OctreeBox::at = det.addPrimAttrib("count",4,GB_ATTRIB_INT,&count);
+		det.addVariableName("count","COUNT");
 
 		float radius = 0.0f;
 		OctreeBox::rt = det.addAttrib("radius",4,GB_ATTRIB_FLOAT,&radius);
+		det.addVariableName("radius","RADIUS");
+
+		OctreeBox::it = det.addPrimAttrib("mask",12,GB_ATTRIB_INT,ita);
+		det.addVariableName("mask","MASK");
+
+		float box[6] = {bbox.xmin(),bbox.xmax(),bbox.ymin(),bbox.ymax(),bbox.zmin(),bbox.zmax()};
+		det.addAttrib("bbox",24,GB_ATTRIB_FLOAT,box);
+
+		O.maxlevel = 0x01<<mapdiv;
+		O.parentbbox = bbox;
 
 		O.Build(det);
-	}
-	else	Box.Build(det);
+	//}
+	//else	Box.Build(det);
 
 	det.save(file.buffer(),1,NULL);
+
+	// ...SAVE ATLAS
+
+	{
+		UT_String atlas =file;
+		atlas+=".atlas";
+		FILE* fa = fopen(atlas.buffer(),"wb");
+
+		GEO_PrimList& pl = det.primitives();
+
+		int cnt = pl.entries();
+
+		fwrite(&cnt,sizeof(int),1,fa);
+
+		float bb[6] = { bbox.xmin(), bbox.xmax(), bbox.ymin(), bbox.ymax(), bbox.zmin(), bbox.zmax() };
+		fwrite(bb,sizeof(float),6,fa);
+
+		fwrite(&(O.maxlevel),sizeof(int),1,fa);
+		fwrite(&(O.maxlevel),sizeof(int),1,fa);
+		fwrite(&(O.maxlevel),sizeof(int),1,fa);
+
+		for(int i=0;i<cnt;i++)
+		{
+			const GEO_PrimVolume* v = dynamic_cast<const GEO_PrimVolume*>(pl[i]);
+			UT_BoundingBox b;
+			v->getBBox(&b);
+			float _bb[6] = { b.xmin(), b.xmax(), b.ymin(), b.ymax(), b.zmin(), b.zmax() };
+			fwrite(_bb,sizeof(float),6,fa);
+
+			// MASK
+			fwrite(v->castAttribData<int>(OctreeBox::it),sizeof(int),3,fa);
+		}
+
+		fclose(fa);
+	}
 };
 
 int thecallbackfuncdata(void *data, int index, float time,const PRM_Template *tplate)
@@ -1602,7 +1223,6 @@ void SOP_Scallop::SaveData(float time)
 		const GU_Detail* input = inputGeo(0,context);
 		if(input != NULL)
 		{
-			//UT_Matrix4 bm;
 			int res = input->getBBox(&bbox);
 			if(res == 0) clip = false;
 		}
@@ -1637,7 +1257,6 @@ void SOP_Scallop::SaveData(float time)
 	};
 
 	Daemon::now=now;
-	//Daemon::caller=this;
 
 	Daemon::bias = evalFloat("bias",0,now);
 
@@ -1729,7 +1348,7 @@ void SOP_Scallop::SaveData(float time)
 
 	int total = evalInt("count",0,now);
 
-	fwrite(&total,sizeof(int),1,fp);
+	//fwrite(&total,sizeof(int),1,fp);
 
 	UT_Vector3 current(0,0,0);
 	float* C = data;

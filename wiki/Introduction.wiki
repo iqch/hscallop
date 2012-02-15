@@ -7,7 +7,8 @@ This is Scallop SOP - node, which generate pointsets of non-linear concurrent st
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+SOP Node produced next data :
+  * Raw poinsets, which may be reused as geometric quantity
+  * Baked point sets, spooled to file
+  * Division map, stored as bgeo, for reusing it at slicing
+  * Division Atlas for custom executable, which can not use bgeo-based division maps

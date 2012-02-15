@@ -1,0 +1,13 @@
+#summary Project Intro page
+
+= Scallop point generator =
+
+This is Scallop SOP - node, which generate pointsets of non-linear concurrent strange attrctors pool. More information about thme placed at [http://en.wikipedia.org/wiki/Fractal_flame Wikipedia article]
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
